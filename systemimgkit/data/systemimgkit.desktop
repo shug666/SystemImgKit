@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=SystemImgKit
+GenericName=System Image Debloater
+Comment=Android system.img 精简工具：解包、目录化、勾选精简、重新打包
+Comment[en]=Unpack, debloat, and repack Android system-as-root ext4 images
+Exec=systemimgkit gui
+Icon=systemimgkit
+Terminal=false
+Categories=System;
+Keywords=android;system;img;ext4;debloat;repack;unpack;
+StartupNotify=true

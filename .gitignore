@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing / tooling
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# SystemImgKit 运行产物（解包/打包生成，勿提交）
+# 工作区：解包后的文件树、staging 副本、生成的镜像
+tree/
+staging/
+*.img
+*.img.sparse
+deletions.txt
+flash.sh
+fs_config.txt
+file_contexts.txt
+
+# 解包生成的 manifest（按需取消注释；示例镜像的 manifest 体积大）
+manifest.json
+
+# 调试日志
+/tmp/sik_cancel_debug.log
+sik_cancel_debug.log
+*.log
+
+# 大型示例镜像目录（含完整 system.img，体积巨大）
+LSSIA17WIFI64_ROW_OPEN_USER_GCP2A.*/
+*_ROW_OPEN_*/

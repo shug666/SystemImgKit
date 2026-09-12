@@ -1,0 +1,157 @@
+# SystemImgKit guard-list
+#
+# Versioned, data-driven safe-delete list. The catalog marks entries whose
+# directory name matches as locked; the user cannot select them for deletion
+# unless the entry is in `guarded` (overridable) AND the risk-override toggle
+# is enabled. Entries in `core` are NEVER deletable, even with the override on.
+#
+# `generic` applies to all images. `zui` is an overlay applied on top (adds
+# entries to core/guarded) for Lenovo ZUI images.
+#
+# `protected_paths` are top-level image paths that cannot be deleted from the
+# Files view at all (the framework/modules/firmware must stay).
+
+version: 1
+
+generic:
+  # Non-overridable: removal bricks the OS or prevents boot.
+  core:
+    - GmsCore                       # Google Play Services (framework dependency)
+    - GoogleServicesFramework
+    - SetupWizard                   # first-boot setup; removal can bootloop
+    - ZuiSystemUI                   # SystemUI — no UI without it
+    - SettingsProvider
+    - TelephonyProvider
+    - ContactsProvider
+    - CalendarProvider
+    - DownloadProvider
+    - DocumentsUIGoogle
+    - ExternalStorageProvider
+    - ProxyHandler
+    - FusedLocation
+    - NetworkStackGoogle
+    - ManagedProvisioning
+    - Shell
+    - TeleService
+    - TelecomShim
+    - MmsService
+    - UserDictionaryProvider
+    - VpnDialogs
+    - SharedStorageBackup
+    - LocalTransport
+    - BackupRestoreConfirmation
+    - BlockedNumberProvider
+    - CellBroadcastLegacyApp
+    - CredentialManager
+    - E2eeContactKeysProvider
+    - PrivateSpace
+    - StorageManager
+    - GooglePartnerSetup
+    - GoogleRestore
+    - ConfigUpdater
+    - GoogleFeedback
+    - com.google.android.modulemetadata   # mainline module
+    - com.google.mainline.adservices       # mainline module
+    - com.google.mainline.telemetry        # mainline module
+    - MotorolaSettingsProvider
+    - ThemePicker                  # SystemUI theming component
+    - WallpaperCropper
+
+  # Overridable: removal degrades/loses functionality but may be a legit debloat
+  # goal for advanced users. Selectable only with risk-override on; the
+  # override is logged.
+  guarded:
+    - Phonesky                      # Play Store
+    - Velvet                        # Google Assistant
+    - AssistantShell
+    - GoogleKidsSpace
+    - FamilyLinkParentalControls
+    - MotoReadyFor
+    - ReadyForCore
+    - CrossDeviceServices
+    - AndroidSystemIntelligence
+    - AndroidDeveloperVerifier
+    - Wellbeing
+    - PrivateComputeServices
+    - Quantum
+    - QuantumCore
+    - SearchSelector
+    - SettingsIntelligence
+    - Turbo
+    - FilesGoogle
+    - Messages
+    - GWP
+    - ActionCore
+    - WebViewGoogle64              # many apps depend on WebView
+    - TrichromeLibrary64
+    - LatinImeGoogle              # keyboard
+    - SpeechServicesByGoogle
+    - talkback                    # accessibility
+    - GoogleLocationHistory
+    - AccessibilityMenu
+
+  protected_paths:
+    - /apex
+    - /system_dlkm
+    - /odm_dlkm
+    - /odm
+    - /firmware
+    - /dsp
+    - /persist
+    - /init
+    - /bin
+    - /sbin
+    - /lib
+    - /lib64
+    - /vendor
+    - /system/fonts
+    - /system/framework
+    - /system/etc
+    - /system/bin
+    - /system/lib
+    - /system/lib64
+    - /system/xbin
+
+zui:
+  # Overlay for Lenovo ZUI images: adds entries on top of generic.
+  core:
+    - ZuiSystemUI
+  guarded:
+    - LenovoOTA
+    - LenovoWhatsNew
+    - LenovoID
+    - LSF-Device-Phone
+    - LeVoiceCaptionApp
+    - LenovoLoggerPannel
+    - EngineeringCode
+    - OCZ_ClientDownloader
+    - OCZ_DeployServiceApp
+    - OCZ_TabletManager
+    - TabletPushOut
+    - TabletUE
+    - TabletVantage
+    - VantateResources
+    - UDSEngine
+    - ThemesProvider
+    - PenSDK
+    - PenService
+    - ZuiPP
+    - ZuiPenGen
+    - ZuiKeyboardUpdateOlympia
+    - LenovoPAI
+    - AppCloud
+    - DiscoveryApps
+    # /system/preinstall ZUI system components (guarded: lose ZUI features)
+    - ZuiNotes
+    - ZuiWeather
+    - ZuiHFWallpaper
+    - XuiRecorder
+    - FamilySpace
+    - GamingSpace
+    - FindApps
+  # /system/preinstall bloat — freely deletable (NONE guard level). Listed here
+  # for documentation; they need no guard entry:
+  #   Instagram, Capcut_row, AdobeLightRoom, AudioBook, Books, DrivePreinstall,
+  #   Moffice_ROW, MyScript_Calculator, MyScript_Nebo, Opera, OperaNews,
+  #   PlayGames, SmarterReader_ROW, Squid, VideosPreinstall, YTMusicPreinstall,
+  #   YouTubeKids

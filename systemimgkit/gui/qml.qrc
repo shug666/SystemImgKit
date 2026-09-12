@@ -1,0 +1,28 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file alias="main.qml">qml/main.qml</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file alias="open.svg">resources/icons/open.svg</file>
+        <file alias="unpack.svg">resources/icons/unpack.svg</file>
+        <file alias="list.svg">resources/icons/list.svg</file>
+        <file alias="pack.svg">resources/icons/pack.svg</file>
+        <file alias="cancel.svg">resources/icons/cancel.svg</file>
+        <file alias="probe.svg">resources/icons/probe.svg</file>
+        <file alias="sort.svg">resources/icons/sort.svg</file>
+        <file alias="files.svg">resources/icons/files.svg</file>
+        <file alias="bigfile.svg">resources/icons/bigfile.svg</file>
+        <file alias="risk.svg">resources/icons/risk.svg</file>
+    </qresource>
+    <qresource prefix="/">
+        <file alias="icon.svg">resources/icon.svg</file>
+        <file alias="icon-16.png">resources/icon-16.png</file>
+        <file alias="icon-22.png">resources/icon-22.png</file>
+        <file alias="icon-24.png">resources/icon-24.png</file>
+        <file alias="icon-32.png">resources/icon-32.png</file>
+        <file alias="icon-48.png">resources/icon-48.png</file>
+        <file alias="icon-64.png">resources/icon-64.png</file>
+        <file alias="icon-128.png">resources/icon-128.png</file>
+        <file alias="icon-256.png">resources/icon-256.png</file>
+    </qresource>
+</RCC>

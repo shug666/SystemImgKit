@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SystemImgKit application icon (revision 4 — Lucide package-minus).
+     Brand-blue rounded square with a white "package-minus" glyph (a parcel
+     box with a minus sign) from Lucide (ISC license, free for commercial
+     use). The box = a system image / app package; the minus = removing
+     contents (debloat). Modern app-icon convention: solid color tile + a
+     single white glyph, legible down to 16 px.
+     Glyph source: https://unpkg.com/lucide-static@1.45.0/icons/package-minus.svg
+     @license lucide-static v1.45.0 - ISC -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- soft shadow -->
+  <rect x="14" y="16" width="100" height="100" rx="24" ry="24"
+        fill="#000000" opacity="0.08"/>
+  <!-- brand tile (accent blue, matches the in-app c.accent #2A6CF6) -->
+  <rect x="14" y="12" width="100" height="100" rx="24" ry="24"
+        fill="#2A6CF6"/>
+  <!-- Lucide package-minus glyph, scaled to the tile (24→84, centered),
+       stroke recolored to white, stroke-width slightly heavier for small sizes -->
+  <g transform="translate(22 22) scale(3.5)"
+     fill="none" stroke="#FFFFFF" stroke-width="1.7"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22V12"/>
+    <path d="M16 17h6"/>
+    <path d="M21 13V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.675-.955"/>
+    <path d="M3.29 7 12 12l8.71-5"/>
+    <path d="m7.5 4.27 8.997 5.148"/>
+  </g>
+</svg>

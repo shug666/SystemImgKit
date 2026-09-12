@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "systemimgkit"
+version = "0.1.0"
+description = "Unpack, debloat, and repack Android system-as-root ext4 images (ZUI/GMS)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "SystemImgKit" }]
+dependencies = [
+    "PySide6>=6.6",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+systemimgkit = "systemimgkit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["systemimgkit*"]
+
+[tool.setuptools.package-data]
+systemimgkit = [
+    "data/*.yaml",
+    "data/*.desktop",
+    "data/icons/hicolor/*/*/*.png",
+    "gui/qml/*.qml",
+    "gui/*.qrc",
+    "gui/qml_rc.py",
+    "gui/resources/*.svg",
+    "gui/resources/*.png",
+    "ext4tools/linux-x86_64/*",
+]
