@@ -43,7 +43,9 @@ jobs:
           # PySide6's own Qt .so libs from the wheel — no system GL/mesa needed
           # to freeze. pkexec/rsync/e2fsprogs/mesa are USER runtime deps,
           # installed on the target by install-deps.sh, NOT needed to build.
-          apt-get install -y --no-install-recommends ca-certificates
+          # binutils provides objdump, which PyInstaller needs to analyze the
+          # binary dependencies (ELF NEEDED entries) of bundled .so/.exe files.
+          apt-get install -y --no-install-recommends ca-certificates binutils
 
       - name: Verify toolchain
         run: |
