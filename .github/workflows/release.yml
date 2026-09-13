@@ -48,7 +48,7 @@ jobs:
           apt-get update -qq
           # deadsnakes focal has no python3.12-venv package; bootstrap pip via
           # ensurepip instead of relying on a venv.
-          apt-get install -y --no-install-recommends python3.12 python3.12-distutils
+          apt-get install -y --no-install-recommends python3.12
           python3.12 -m ensurepip --upgrade
 
       - name: Verify toolchain
