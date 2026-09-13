@@ -39,23 +39,16 @@ jobs:
       - name: Install build host deps
         run: |
           apt-get update -qq
-          # e2fsprogs provides libext2fs etc. that the bundled ext4tools may
-          # link; rsync for any build-time tree ops; Qt6 GUI runtime libs so
-          # PyInstaller can bundle/resolve them. (img2simg/adb/fastboot are
-          # USER runtime deps — handled by install-deps.sh, not needed to freeze.)
-          apt-get install -y --no-install-recommends \
-            ca-certificates \
-            e2fsprogs rsync \
-            policykit-1 \
-            libgl1 libegl1 libxkbcommon0 libdbus-1-3
+          # Minimal: only ca-certificates for pip HTTPS. PyInstaller bundles
+          # PySide6's own Qt .so libs from the wheel — no system GL/mesa needed
+          # to freeze. pkexec/rsync/e2fsprogs/mesa are USER runtime deps,
+          # installed on the target by install-deps.sh, NOT needed to build.
+          apt-get install -y --no-install-recommends ca-certificates
 
       - name: Verify toolchain
         run: |
           python3 --version
           python3 -m pip --version
-          for t in mke2fs e2fsck debugfs rsync pkexec; do
-            command -v "$t" || { echo "missing $t"; exit 1; }
-          done
 
       - name: Install Python deps
         run: |
