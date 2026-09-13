@@ -87,8 +87,9 @@ gui_a = Analysis(
 )
 
 # --- Root helper Analysis ------------------------------------------------
-# The helper never imports PySide6, so its bundle is much smaller. We still
-# feed the same datas/binaries so a single COLLECT dedups them into one _internal.
+# The helper never imports PySide6, so its bundle is much smaller. It does not
+# need the QML hidden-imports or icon tree; only the shared ext4tools binaries
+# and guardlist yaml (which COLLECT dedups with the GUI's copies).
 helper_a = Analysis(
     [os.path.join(PKG, "root_helper.py")],
     pathex=[REPO_ROOT],
@@ -99,40 +100,50 @@ helper_a = Analysis(
     noarchive=False,
 )
 
+# Modern PyInstaller 6.x onedir pattern: bytecode (`pure`) goes into a PYZ
+# archive, EXE takes only scripts with `exclude_binaries=True`, and the
+# binaries/datas are placed by COLLECT. Passing `pure` straight into EXE (the
+# old onefile-style pattern) trips the `BYTECODE_MAGIC` assertion during PKG
+# assembly.
+gui_pyz = PYZ(gui_a.pure)
 gui_exe = EXE(
-    gui_a.pure,
-    gui_a.binaries,
-    gui_a.datas,
+    gui_pyz,
+    gui_a.scripts,
     [],
+    exclude_binaries=True,
     name="systemimgkit",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
     console=False,  # GUI app: no terminal window
-    target_arch="x86_64",
 )
 
+helper_pyz = PYZ(helper_a.pure)
 helper_exe = EXE(
-    helper_a.pure,
-    helper_a.binaries,
-    helper_a.datas,
+    helper_pyz,
+    helper_a.scripts,
     [],
+    exclude_binaries=True,
     name="root_helper",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
     console=True,  # helper talks over stdout/stderr protocol; keep stdio
-    target_arch="x86_64",
 )
 
-# Single COLLECT merges both executables into one onedir: dist/systemimgkit/.
-# This is what makes the sibling-helper resolution in rootops._helper_module()
-# work — both exes sit side by side at the onedir root.
+# Single COLLECT merges both executables + their binaries/datas into one
+# onedir: dist/systemimgkit/. This is what makes the sibling-helper resolution
+# in rootops._helper_module() work — both exes sit side by side at the onedir
+# root. COLLECT dedups shared binaries/datas (ext4tools, guardlist, icons).
 COLLECT(
     gui_exe,
     helper_exe,
+    gui_a.binaries,
+    gui_a.datas,
+    helper_a.binaries,
+    helper_a.datas,
     name="systemimgkit",
     strip=False,
     upx=False,
