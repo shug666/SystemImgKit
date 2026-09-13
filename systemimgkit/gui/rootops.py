@@ -21,11 +21,28 @@ import subprocess
 import sys
 import threading
 
+from ..errors import SystemImgKitError
 from ..runner import CancelledError, cancel_debug
 
 
 def _helper_module() -> list[str]:
-    """Command to invoke the root helper as a module."""
+    """Command to invoke the root helper.
+
+    Dev environment: `sys.executable -m systemimgkit.root_helper`.
+    Frozen (PyInstaller) environment: `sys.executable` is the frozen GUI
+    executable and `-m` cannot import packaged modules, so we invoke the
+    sibling frozen `root_helper` executable placed next to the GUI in the
+    same onedir directory. Without this branch the pkexec → root_helper
+    chain breaks after packaging and unpack/pack silently fail.
+    """
+    if getattr(sys, "frozen", False):
+        helper = os.path.join(os.path.dirname(sys.executable), "root_helper")
+        if not (os.path.isfile(helper) and os.access(helper, os.X_OK)):
+            raise SystemImgKitError(
+                "未找到打包内置的 root helper: %s。安装包可能损坏，请重新下载。"
+                % helper
+            )
+        return [helper]
     return [sys.executable, "-m", "systemimgkit.root_helper"]
 
 
