@@ -39,7 +39,9 @@ jobs:
           # deadsnakes PPA needs add-apt-repository (software-properties-common)
           apt-get install -y --no-install-recommends \
             ca-certificates software-properties-common gnupg curl \
-            e2fsprogs rsync android-tools-fsutils adb fastboot \
+            e2fsprogs rsync \
+            android-sdk-libsparse-utils android-sdk-ext4-utils \
+            adb fastboot \
             policykit-1 \
             libgl1 libegl1 libxkbcommon0 libdbus-1-3
           add-apt-repository -y ppa:deadsnakes/ppa

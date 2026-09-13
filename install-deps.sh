@@ -17,16 +17,18 @@ fi
 echo "==> 安装 SystemImgKit 运行期宿主依赖（Ubuntu 20.04）"
 
 # --- 安装软件包列表 -------------------------------------------------------
-# e2fsprogs     mke2fs / e2fsck / resize2fs / debugfs / dumpe2fs / tune2fs（必需）
-# rsync         高保真解包提取（必需）
-# android-tools-fsutils  提供 img2simg / simg2img（可选：稀疏镜像）
-# adb fastboot  刷机（可选）
-# policykit-1   pkexec 提权（GUI root 操作链必需）
+# e2fsprogs               mke2fs / e2fsck / resize2fs / debugfs / dumpe2fs / tune2fs（必需）
+# rsync                   高保真解包提取（必需）
+# android-sdk-libsparse-utils  提供 img2simg / simg2img（可选：稀疏镜像）
+# android-sdk-ext4-utils       Android ext4 工具配套
+# adb fastboot            刷机（可选）
+# policykit-1             pkexec 提权（GUI root 操作链必需）
 # libgl1 libegl1 libxkbcommon0 libdbus-1-3  Qt6 GUI 运行期图形库
 PACKAGES=(
     e2fsprogs
     rsync
-    android-tools-fsutils
+    android-sdk-libsparse-utils
+    android-sdk-ext4-utils
     adb
     fastboot
     policykit-1
@@ -36,13 +38,9 @@ PACKAGES=(
     libdbus-1-3
 )
 
-# android-tools-fsutils 在某些 20.04 镜像里可能不在基础源；用 universe 源。
-if ! apt-cache show android-tools-fsutils >/dev/null 2>&1; then
-    echo "==> 启用 universe 源（android-tools-fsutils 所在）"
-    sudo apt-get update -qq
-    # 确保已启用 universe（20.04 通常默认开启）
-    sudo add-apt-repository -y universe 2>/dev/null || true
-fi
+# android-sdk-* 工具包在 universe 源；启用 universe（20.04 通常默认开启）。
+echo "==> 启用 universe 源"
+sudo add-apt-repository -y universe 2>/dev/null || true
 
 echo "==> apt update"
 sudo apt-get update -qq
