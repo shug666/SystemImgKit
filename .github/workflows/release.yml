@@ -23,53 +23,51 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Debian 11 bullseye ships glibc 2.31 — identical to Ubuntu 20.04.6 — and
+    # the python:3.12-slim-bullseye image bundles Python 3.12 + pip, so we skip
+    # the fragile deadsnakes-PPA / ensurepip dance. The frozen binaries link
+    # against glibc 2.31 and therefore run on 20.04.6.
     container:
-      image: ubuntu:20.04
+      image: python:3.12-slim-bullseye
       env:
         DEBIAN_FRONTEND: noninteractive
-        # Avoid tzdata interactive prompt during apt install.
         TZ: UTC
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install build & runtime host deps (mirror install-deps.sh)
+      - name: Install build host deps
         run: |
           apt-get update -qq
-          # deadsnakes PPA needs add-apt-repository (software-properties-common)
+          # e2fsprogs provides libext2fs etc. that the bundled ext4tools may
+          # link; rsync for any build-time tree ops; Qt6 GUI runtime libs so
+          # PyInstaller can bundle/resolve them. (img2simg/adb/fastboot are
+          # USER runtime deps — handled by install-deps.sh, not needed to freeze.)
           apt-get install -y --no-install-recommends \
-            ca-certificates software-properties-common gnupg curl \
+            ca-certificates \
             e2fsprogs rsync \
-            android-sdk-libsparse-utils android-sdk-ext4-utils \
-            adb fastboot \
             policykit-1 \
             libgl1 libegl1 libxkbcommon0 libdbus-1-3
-          add-apt-repository -y ppa:deadsnakes/ppa
-          apt-get update -qq
-          # deadsnakes focal has no python3.12-venv package; bootstrap pip via
-          # ensurepip instead of relying on a venv.
-          apt-get install -y --no-install-recommends python3.12
-          python3.12 -m ensurepip --upgrade
 
       - name: Verify toolchain
         run: |
-          python3.12 --version
-          python3.12 -m pip --version
+          python3 --version
+          python3 -m pip --version
           for t in mke2fs e2fsck debugfs rsync pkexec; do
             command -v "$t" || { echo "missing $t"; exit 1; }
           done
 
       - name: Install Python deps
         run: |
-          python3.12 -m pip install --upgrade pip
-          python3.12 -m pip install \
+          python3 -m pip install --upgrade pip
+          python3 -m pip install \
             "PySide6>=6.6" "PyYAML>=6.0" "pyinstaller" "setuptools>=68" "wheel"
           # Install the project so entry points / package import resolve.
-          python3.12 -m pip install -e .
+          python3 -m pip install -e .
 
       - name: Build with PyInstaller (onedir, two entries)
         run: |
-          python3.12 -m PyInstaller packaging/systemimgkit.spec --noconfirm
+          python3 -m PyInstaller packaging/systemimgkit.spec --noconfirm
           # Sanity: both sibling executables must sit at the onedir root.
           test -x dist/systemimgkit/systemimgkit
           test -x dist/systemimgkit/root_helper
