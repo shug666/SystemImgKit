@@ -31,6 +31,27 @@ systemimgkit check-tools
 
 ## 安装
 
+### 方式一：下载安装包（推荐，Ubuntu 20.04.6）
+
+从 [GitHub Releases](https://github.com/shug666/SystemImgKit/releases) 下载适用于 Ubuntu 20.04.6 的便携包，无需自行准备 Python 3.12 或 PySide6：
+
+```bash
+# 1. 安装宿主级运行依赖（e2fsprogs / rsync / pkexec / Qt6 图形库等，幂等可重复运行）
+chmod +x install-deps.sh
+./install-deps.sh
+
+# 2. 解压便携包
+tar xzf SystemImgKit-*-ubuntu-20.04-x86_64.tar.gz
+
+# 3. 启动 GUI
+cd systemimgkit
+./systemimgkit
+```
+
+> 首次解包/打包时会弹出 `pkexec` 授权窗口，输入你的密码即可。打包内的 `mke2fs`/`e2fsdroid` 已随包内置，无需额外配置。
+
+### 方式二：从源码安装（开发者）
+
 ```bash
 git clone git@github.com:shug666/SystemImgKit.git
 cd SystemImgKit
