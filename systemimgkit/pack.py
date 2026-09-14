@@ -77,16 +77,29 @@ def pack(
 
     # Output image size: default to the original partition size; allow a
     # smaller target when the device's system partition is smaller than the
-    # original image (common with dynamic super partitions).
+    # original image (common with dynamic super partitions). A target *larger*
+    # than the original image means no shrinking is needed — build at the
+    # original size. The tool is shrink-only: it never enlarges the image, so
+    # a target above the original is clamped down to the original (the common
+    # probe outcome, since OEM partitions are sized above the shipped image).
+    # See change pack-target-clamp.
     build_block_count = target_blocks or original_block_count
+    clamped_to_original = False
     if target_blocks and target_blocks < original_block_count:
         on_line and on_line(
             f"目标分区: {target_blocks:,} 块 ({target_blocks*block_size/1e9:.2f} GB),"
             f" 原分区 {original_block_count:,} 块 — 按目标大小建镜像")
     elif target_blocks and target_blocks > original_block_count:
-        raise SystemImgKitError(
-            f"目标分区 {target_blocks:,} 块大于原分区 {original_block_count:,} 块,"
-            f"无法增大镜像(工具只用于缩小)。")
+        # target > original: no shrinking needed. Clamp to the original size
+        # (we never enlarge) instead of erroring — a raw ext4 image flashes
+        # fine into a larger partition, leaving the tail unused.
+        build_block_count = original_block_count
+        clamped_to_original = True
+        on_line and on_line(
+            f"目标分区 {target_blocks:,} 块大于原镜像 {original_block_count:,} 块，"
+            f"按原镜像大小建镜像，分区剩余空间不使用")
+    # target_blocks == original_block_count: falls through; build_block_count
+    # is already original_block_count (no info line — unchanged behavior).
     target_bytes = build_block_count * block_size
 
     # Resolve deletion set.
@@ -272,6 +285,12 @@ def pack(
     if sparse_path:
         _maybe_chown_to_user(sparse_path)
 
+    if clamped_to_original:
+        warnings.append(
+            f"目标分区大于原镜像，已按原镜像大小建镜像 "
+            f"({build_block_count:,} 块)，分区剩余空间不使用。"
+        )
+
     return PackResult(
         output_image=output_image,
         sparse_image=sparse_path,
@@ -393,7 +412,7 @@ def _restore_metadata(image_path, man, on_line, cancel) -> tuple[list[str], bool
 _FLASH_SCRIPT_TEMPLATE = """#!/usr/bin/env bash
 # SystemImgKit — Strategy A flash script (AVB verification disabled).
 #
-# Prerequisites: bootloader UNLOCKED, device connected via USB, adb/fastboot installed.
+# Prerequisites: bootloader UNLOCKED, device already in fastboot mode (power + volume-down), fastboot installed.
 # This disables verified boot (vbmeta) and flashes the rebuilt system image.
 # Review before running. The tool never re-signs images.
 
@@ -407,11 +426,7 @@ if [ ! -f "$SYS_IMG" ]; then
   echo "system image not found: $SYS_IMG" >&2; exit 1
 fi
 
-# 1. Reboot into fastboot mode
-echo "Rebooting to fastboot…"
-adb reboot fastboot
-
-# wait for the device to show up in fastboot
+# 1. Wait for the device to show up in fastboot (enter fastboot manually first)
 echo "Waiting for fastboot device…"
 fastboot getvar product 2>/dev/null || sleep 5
 

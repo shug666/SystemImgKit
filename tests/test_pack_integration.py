@@ -82,6 +82,16 @@ def test_pack_builds_clean_footerless_image(tmp_path):
     assert os.path.isfile(res.output_image)
     assert os.path.getsize(res.output_image) == 512 * 4096
     assert os.path.exists(res.flash_script)
+    # flash.sh must not reboot to fastboot or invoke adb (device enters fastboot manually).
+    with open(res.flash_script) as fh:
+        _flash_text = fh.read()
+    assert "adb reboot fastboot" not in _flash_text
+    # no `adb` invocation anywhere in the script (header or body)
+    assert " adb " not in _flash_text and not _flash_text.lstrip().startswith("adb ")
+    # the prerequisite line in the header must not advertise adb
+    for _line in _flash_text.splitlines():
+        if _line.startswith("# Prerequisites:"):
+            assert "adb" not in _line, _line
     # Task 4.8: no AVB footer on the output.
     from systemimgkit import avb
     avb.assert_no_footer(res.output_image)  # would raise if footer present
@@ -127,6 +137,84 @@ def test_pack_refuses_when_tree_exceeds_partition(tmp_path):
     out = str(tmp_path / "system_new.img")
     with pytest.raises(SizeCapExceededError):
         pack.pack(ws, out, deletions=[])
+
+
+@needs_e2fsprogs
+def test_pack_clamps_when_target_larger_than_original(tmp_path):
+    """pack-target-clamp 3.1: target_blocks > original_block_count no longer
+    raises; it builds at original_block_count and reports the clamp via on_line."""
+    ws = Workspace(root=str(tmp_path / "ws"))
+    os.makedirs(ws.root, exist_ok=True)
+    _make_fixture_tree(ws.tree)
+    _write_manifest(ws, block_count=512)            # 2 MiB original
+    out = str(tmp_path / "system_new.img")
+    lines = []
+    res = pack.pack(ws, out, deletions=[],
+                    target_blocks=1024,             # larger than 512
+                    on_line=lines.append)
+    # No raise (reaching here proves it); builds at the original size.
+    assert res.block_count == 512
+    assert os.path.getsize(res.output_image) == 512 * 4096
+    # on_line received the clamp info naming both block counts.
+    clamp_lines = [l for l in lines if "按原镜像大小建镜像" in l]
+    assert clamp_lines, lines
+    assert "1,024" in clamp_lines[0] and "512" in clamp_lines[0]
+    # The clamp is also recorded as a structured warning for CLI/JSON consumers.
+    assert any("按原镜像大小建镜像" in w for w in res.warnings)
+
+
+@needs_e2fsprogs
+def test_pack_target_equal_to_original_builds_at_original(tmp_path):
+    """pack-target-clamp 3.2: target == original builds at original (regression
+    — unchanged from the prior fall-through, no info/warning emitted)."""
+    ws = Workspace(root=str(tmp_path / "ws"))
+    os.makedirs(ws.root, exist_ok=True)
+    _make_fixture_tree(ws.tree)
+    _write_manifest(ws, block_count=512)
+    out = str(tmp_path / "system_new.img")
+    lines = []
+    res = pack.pack(ws, out, deletions=[],
+                    target_blocks=512,
+                    on_line=lines.append)
+    assert res.block_count == 512
+    assert os.path.getsize(res.output_image) == 512 * 4096
+    # Equal case falls through silently — no clamp info, no warning.
+    assert not any("按原镜像大小建镜像" in l for l in lines)
+    assert not any("按原镜像大小建镜像" in w for w in res.warnings)
+
+
+@needs_e2fsprogs
+def test_pack_target_smaller_than_original_builds_at_target(tmp_path):
+    """pack-target-clamp 3.3: 0 < target < original builds at target
+    (regression, unchanged)."""
+    ws = Workspace(root=str(tmp_path / "ws"))
+    os.makedirs(ws.root, exist_ok=True)
+    _make_fixture_tree(ws.tree)
+    _write_manifest(ws, block_count=512)            # 2 MiB original
+    out = str(tmp_path / "system_new.img")
+    lines = []
+    res = pack.pack(ws, out, deletions=[],
+                    target_blocks=256,              # shrink to 1 MiB
+                    on_line=lines.append)
+    assert res.block_count == 256
+    assert os.path.getsize(res.output_image) == 256 * 4096
+    # Shrink path emits its own info line, not the clamp line.
+    assert any("按目标大小建镜像" in l for l in lines)
+    assert not any("按原镜像大小建镜像" in l for l in lines)
+
+
+@needs_e2fsprogs
+def test_pack_no_target_builds_at_original(tmp_path):
+    """pack-target-clamp 3.4: target_blocks == 0 builds at original
+    (regression, unchanged)."""
+    ws = Workspace(root=str(tmp_path / "ws"))
+    os.makedirs(ws.root, exist_ok=True)
+    _make_fixture_tree(ws.tree)
+    _write_manifest(ws, block_count=512)
+    out = str(tmp_path / "system_new.img")
+    res = pack.pack(ws, out, deletions=[], target_blocks=0)
+    assert res.block_count == 512
+    assert os.path.getsize(res.output_image) == 512 * 4096
 
 
 def test_source_unchanged_after_strip(tmp_path):

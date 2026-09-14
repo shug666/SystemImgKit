@@ -210,3 +210,27 @@ def test_prepack_guard_skipped_when_no_target(qapp, tmp_path):
     # With no target, _prepack_fit_ok must NOT be what packTo calls. We assert
     # the predicate directly: target_blocks>0 is False, so packing proceeds.
     assert not (c._target_blocks and c._target_blocks > 0)
+
+
+def test_prepack_guard_proceeds_when_target_larger_than_original(qapp, tmp_path):
+    """pack-target-clamp 3.5: target_bytes > original_content_size → the guard
+    returns True (proceed) and appends the "设备分区大于原镜像" info, WITHOUT
+    emitting the "删得不够" errorMessage. Consistent with the backend clamp."""
+    ws = _make_manifest(str(tmp_path), original_image_size=10 * 10**9,
+                        block_size=4096)            # 10 GB original
+    c = Controller()
+    c._workspace_dir = ws.root
+    # Target = 12 GB → larger than the 10 GB original (probe-common case).
+    c._target_blocks = round(12e9 / 4096)
+
+    # reclaim irrelevant for this branch, but stub to be safe.
+    c.app_model.reclaim_total = lambda: 0
+    c.bigfile_model.selected_size = lambda: 0
+
+    # Capture errorMessage emissions (a Qt signal); none should fire here.
+    errored = []
+    c.errorMessage.connect(lambda title, msg: errored.append((title, msg)))
+
+    assert c._prepack_fit_ok(ws) is True
+    assert errored == []                            # no "删得不够" error
+

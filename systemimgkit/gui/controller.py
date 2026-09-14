@@ -776,6 +776,17 @@ class Controller(QObject):
         reclaim = (self.app_model.reclaim_total()
                    + self.bigfile_model.selected_size())
         target_bytes = self._target_blocks * block_size
+        # Target partition larger than the original image: no shrinking is
+        # needed, so there is nothing to fit-check. The backend (pack.py) clamps
+        # to the original size in this case; report it upfront here so the user
+        # is told at click time rather than only via the mid-pack on_line. See
+        # change pack-target-clamp.
+        if target_bytes > original_content_size:
+            self.append_warning(
+                f"设备分区 {target_bytes:,} 字节大于原镜像 "
+                f"{original_content_size:,} 字节，将按原镜像大小建镜像，"
+                f"分区剩余空间不使用。")
+            return True
         estimate_remaining = max(original_content_size - reclaim, 0)
         if estimate_remaining > target_bytes:
             self.append_warning(
